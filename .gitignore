@@ -1,0 +1,29 @@
+# ── Secretos y configuración local ──────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ── Dependencias y artefactos de build ──────────────────────────
+node_modules/
+dist/
+*.log
+
+# ── Terraform / IaC ─────────────────────────────────────────────
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# ── Sistema operativo / editores ────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
