@@ -9,13 +9,27 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-const JWT_SECRET   = process.env.ADMIN_JWT_SECRET   || 'change-me-in-production';
-const ADMIN_USER   = process.env.ADMIN_USERNAME      || 'admin';
-const ADMIN_PASS   = process.env.ADMIN_PASSWORD      || 'admin';
+// Los secretos no tienen valor por defecto: si faltan, el proceso no arranca.
+// Un despliegue mal configurado falla rápido en lugar de quedar accesible con
+// credenciales conocidas.
+function required(name: string, minLength = 0): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Falta la variable de entorno obligatoria: ${name}`);
+  }
+  if (value.length < minLength) {
+    throw new Error(`La variable ${name} debe tener al menos ${minLength} caracteres`);
+  }
+  return value;
+}
+
+const JWT_SECRET   = required('ADMIN_JWT_SECRET', 32);
+const ADMIN_USER   = required('ADMIN_USERNAME');
+const ADMIN_PASS   = required('ADMIN_PASSWORD');
 const DB_HOST      = process.env.DB_HOST             || 'db';
 const DB_PORT      = parseInt(process.env.DB_PORT    || '5432');
 const DB_USER      = process.env.DB_USER             || 'retail_user';
-const DB_PASS      = process.env.DB_PASSWORD         || 'retailpassword';
+const DB_PASS      = required('DB_PASSWORD');
 
 const catalogDb = new Pool({ host: DB_HOST, port: DB_PORT, database: 'catalogdb', user: DB_USER, password: DB_PASS });
 const ordersDb  = new Pool({ host: DB_HOST, port: DB_PORT, database: 'orders',    user: DB_USER, password: DB_PASS });
