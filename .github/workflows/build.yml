@@ -1,0 +1,48 @@
+name: Build microservices
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: catalog
+            context: ./src/catalog
+          - service: carts
+            context: ./src/cart
+          - service: orders
+            context: ./src/orders
+          - service: checkout
+            context: ./src/checkout
+          - service: ui
+            context: ./src/ui
+          - service: admin
+            context: ./src/admin
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Build container image
+        run: >-
+          docker build
+          --tag "tero-${{ matrix.service }}:${GITHUB_SHA}"
+          "${{ matrix.context }}"
