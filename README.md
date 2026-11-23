@@ -11,16 +11,26 @@ Tero es una tienda en línea basada en microservicios. Permite explorar un catá
 
 ## Inicio rápido
 
+Las credenciales no están versionadas. Antes de levantar el stack, crear el
+archivo local `.env` a partir de la plantilla y completar los valores:
+
 ```bash
+cp .env.example .env
+# editar .env: POSTGRES_PASSWORD, ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_JWT_SECRET
 docker compose up --build
 ```
+
+Si falta alguna variable obligatoria, Compose aborta con un mensaje explícito
+en lugar de arrancar con credenciales por defecto.
 
 | Servicio | URL                   |
 |----------|-----------------------|
 | Tienda   | http://localhost:8080 |
 | Admin    | http://localhost:8081 |
 
-Credenciales del admin por defecto: `admin` / `admin`
+Las credenciales del Admin son las definidas en `.env`. La base de datos y Redis
+**no** se publican en la máquina anfitriona: solo son accesibles desde la red
+interna de Compose.
 
 ## Comandos útiles
 
@@ -137,7 +147,7 @@ docker compose logs -f <servicio>
 |----------------------------------------|-----------------------|------------------|
 | `RETAIL_CATALOG_PERSISTENCE_PROVIDER`  | Tipo de persistencia  | `postgres`       |
 | `RETAIL_CATALOG_PERSISTENCE_ENDPOINT`  | Host:Puerto de la DB  | `db:5432`        |
-| `DB_PASSWORD`                          | Contraseña PostgreSQL | `retailpassword` |
+| `POSTGRES_PASSWORD`                    | Contraseña PostgreSQL | **obligatoria** (`.env`) |
 
 ### Checkout
 | Variable                                   | Descripción              | Default               |
@@ -149,9 +159,9 @@ docker compose logs -f <servicio>
 ### Admin
 | Variable            | Descripción                | Default                   |
 |---------------------|----------------------------|---------------------------|
-| `ADMIN_USERNAME`    | Usuario administrador      | `admin`                   |
-| `ADMIN_PASSWORD`    | Contraseña administrador   | `admin`                   |
-| `ADMIN_JWT_SECRET`  | Secreto para tokens JWT    | `change-me-in-production` |
+| `ADMIN_USERNAME`    | Usuario administrador      | **obligatoria** (`.env`)  |
+| `ADMIN_PASSWORD`    | Contraseña administrador   | **obligatoria** (`.env`)  |
+| `ADMIN_JWT_SECRET`  | Secreto para tokens JWT (mín. 32 caracteres) | **obligatoria** (`.env`) |
 
 ---
 
@@ -169,3 +179,11 @@ app/
     ├── ui/             # TypeScript/Express - Frontend
     └── admin/          # TypeScript/Express - Panel de administración
 ```
+
+---
+
+## Decisiones de diseño
+
+Las decisiones relevantes se documentan como ADRs en [`docs/adr/`](docs/adr/):
+
+- [ADR 0001 — Secretos fuera del repositorio](docs/adr/0001-secretos-fuera-del-repositorio.md)
