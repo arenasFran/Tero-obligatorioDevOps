@@ -47,7 +47,7 @@ jobs:
         run: docker compose build catalog carts orders checkout ui admin
 
       - name: Start the application stack
-        run: docker compose up --detach --no-build
+        run: docker compose up --detach --no-build db redis catalog carts orders checkout ui
 
       - name: Wait for catalog and cart APIs
         shell: bash

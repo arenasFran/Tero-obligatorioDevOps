@@ -19,10 +19,10 @@ Si un servicio no compila, no está disponible o falla una aserción de la colec
 
 ## Ejecución local
 
-Con Docker Compose y Node.js instalados, completar `.env` usando `.env.example`. Si el stack habitual ya está levantado, detenerlo primero porque la UI usa los puertos `8080` y `8081`. Levantar el stack de pruebas con un nombre de proyecto separado para no reutilizar el volumen de desarrollo:
+Con Docker Compose y Node.js instalados, completar `.env` usando `.env.example`. Si la UI habitual ya está levantada, detenerla primero porque las pruebas usan el puerto `8080`. Levantar el stack de pruebas con un nombre de proyecto separado para no reutilizar el volumen de desarrollo:
 
 ```bash
-docker compose -p tero-api-test up --build --detach
+docker compose -p tero-api-test up --build --detach db redis catalog carts orders checkout ui
 ```
 
 En otra terminal, ejecutar la misma colección que usa CI:
