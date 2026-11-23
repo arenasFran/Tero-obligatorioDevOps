@@ -1,0 +1,129 @@
+{
+  "info": {
+    "name": "Tero API integration tests",
+    "description": "Functional API checks through the UI gateway against the catalog and cart services.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Catalog returns seeded products",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/catalog/products"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const products = pm.response.json();",
+              "pm.test('catalog responds with HTTP 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "pm.test('catalog returns at least one seeded product', function () {",
+              "  pm.expect(products).to.be.an('array').that.is.not.empty;",
+              "  pm.expect(products[0]).to.have.property('id');",
+              "  pm.expect(products[0].price).to.be.a('number');",
+              "});",
+              "if (Array.isArray(products) && products.length > 0) {",
+              "  pm.collectionVariables.set('productId', products[0].id);",
+              "  pm.collectionVariables.set('productPrice', String(products[0].price));",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Add an item to the cart",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"itemId\": \"{{productId}}\",\n  \"quantity\": 2,\n  \"unitPrice\": {{productPrice}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": "{{baseUrl}}/api/carts/{{customerId}}/items"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('cart accepts a new item with HTTP 201', function () {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "pm.test('created item matches the request', function () {",
+              "  const item = pm.response.json();",
+              "  pm.expect(item.itemId).to.eql(pm.collectionVariables.get('productId'));",
+              "  pm.expect(item.quantity).to.eql(2);",
+              "  pm.expect(item.unitPrice).to.eql(Number(pm.collectionVariables.get('productPrice')));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Read the item from the cart",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/carts/{{customerId}}/items"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('cart items respond with HTTP 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "pm.test('cart contains the item added earlier', function () {",
+              "  const items = pm.response.json();",
+              "  const item = items.find((entry) => entry.itemId === pm.collectionVariables.get('productId'));",
+              "  pm.expect(item).to.exist;",
+              "  pm.expect(item.quantity).to.eql(2);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Clean up the test cart",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/api/carts/{{customerId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('test cart is removed with HTTP 202', function () {",
+              "  pm.response.to.have.status(202);",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
