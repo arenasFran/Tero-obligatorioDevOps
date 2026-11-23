@@ -19,4 +19,12 @@ GitHub Flow: una rama permanente (`main`) y ramas cortas por tarea que se integr
 - Se borra la rama después del merge.
 
 ## Relación con los ambientes
-Dev, Test y Prod no son ramas. Todos los ambientes se despliegan desde `main` y el pipeline promueve el mismo artefacto de uno al siguiente, siempre que pase los quality gates de calidad y seguridad.
+Dev, Test y Prod no son ramas permanentes. El código entra por Pull Request a `main`; desde ahí se despliega a Dev y Test. Prod se despliega a partir de un tag de versión `v*` (por ejemplo, `v1.0.0`) creado sobre un commit de `main` que ya pasó Test.
+
+Los environments de GitHub están configurados así:
+
+- **Dev:** permite despliegues desde la rama `main`, sin aprobación manual.
+- **Test:** permite despliegues desde la rama `main`, sin aprobación manual.
+- **Prod:** permite despliegues desde tags `v*` y requiere la aprobación de `MacDuki`. Está activada la prevención de autoaprobación y los administradores no pueden omitir la regla.
+
+El pipeline debe construir el artefacto una sola vez y promover ese mismo artefacto de Dev a Test y luego a Prod, siempre que pase los quality gates de calidad y seguridad. El tag de Prod identifica el commit aprobado; no implica mantener una rama `prod`.
