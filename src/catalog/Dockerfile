@@ -1,9 +1,19 @@
-FROM golang:1.24
+FROM golang:1.24-alpine AS builder
+WORKDIR /src
+RUN apk add --no-cache build-base
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN mkdir -p /out && CGO_ENABLED=1 go build -trimpath -ldflags="-s -w" -o /out/catalog .
+
+FROM alpine:3.22
+RUN apk add --no-cache ca-certificates libgcc \
+    && addgroup -S -g 10001 app \
+    && adduser -S -u 10001 -G app app \
+    && mkdir -p /app \
+    && chown app:app /app
 WORKDIR /app
-RUN groupadd --gid 10001 app && useradd --uid 10001 --gid app --shell /usr/sbin/nologin --create-home app
-COPY --chown=app:app . .
-RUN go mod download && go build -o catalog . \
-    && chown app:app catalog
+COPY --from=builder --chown=app:app /out/catalog ./catalog
 USER app
 EXPOSE 8080
-CMD ["./catalog"]
+ENTRYPOINT ["./catalog"]
