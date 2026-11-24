@@ -187,3 +187,7 @@ app/
 Las decisiones relevantes se documentan como ADRs en [`docs/adr/`](docs/adr/):
 
 - [ADR 0001 — Secretos fuera del repositorio](docs/adr/0001-secretos-fuera-del-repositorio.md)
+
+El análisis estático de código y su umbral de calidad se describen en
+[`docs/quality.md`](docs/quality.md). Las pruebas funcionales de API se explican
+en [`docs/testing.md`](docs/testing.md).
