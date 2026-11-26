@@ -1,4 +1,4 @@
-FROM golang:1.24-alpine AS builder
+FROM golang:1.27.4-alpine AS builder
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
@@ -6,7 +6,8 @@ COPY . .
 RUN mkdir -p /out && CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/orders .
 
 FROM alpine:3.22
-RUN apk add --no-cache ca-certificates \
+RUN apk upgrade --no-cache \
+    && apk add --no-cache ca-certificates \
     && addgroup -S -g 10001 app \
     && adduser -S -u 10001 -G app app \
     && mkdir -p /app \

@@ -1,15 +1,14 @@
-FROM python:3.12-slim AS builder
+FROM python:3.12-alpine AS builder
 WORKDIR /build
 COPY requirements.txt .
 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-FROM python:3.12-slim
+FROM python:3.12-alpine
 WORKDIR /app
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates \
-    && rm -rf /var/lib/apt/lists/* \
-    && groupadd --gid 10001 app \
-    && useradd --uid 10001 --gid app --shell /usr/sbin/nologin --create-home app
+RUN apk upgrade --no-cache \
+    && apk add --no-cache ca-certificates \
+    && addgroup -g 10001 -S app \
+    && adduser -u 10001 -S -G app -s /sbin/nologin app
 COPY --from=builder /install/ /usr/local/
 COPY --chown=app:app . .
 USER app
