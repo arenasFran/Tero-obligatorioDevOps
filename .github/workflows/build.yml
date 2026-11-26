@@ -31,6 +31,63 @@ jobs:
       - name: Analyze source code
         run: semgrep scan --config auto --error .
 
+  dependency-scan:
+    name: Dependency vulnerability scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Scan dependencies for high and critical vulnerabilities
+        run: >-
+          docker run --rm
+          -v "$PWD:/workspace"
+          -w /workspace
+          ghcr.io/aquasecurity/trivy:0.76.2
+          fs --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --skip-dirs .git .
+
+  secret-scan:
+    name: Secret scanning
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: Check out commit history for the scan range
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Scan Git history for exposed secrets
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: "false"
+          GITLEAKS_VERSION: "8.30.1"
+
+  scan-container-images:
+    name: Build and scan container images
+    if: github.event_name == 'pull_request'
+    needs:
+      - build-and-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Build and scan all service images
+        run: bash .github/scripts/build-scan-publish-images.sh
+
   build-and-test:
     name: Build and API integration tests
     runs-on: ubuntu-latest
@@ -97,3 +154,27 @@ jobs:
       - name: Stop the test stack
         if: always()
         run: docker compose down --volumes --remove-orphans
+
+  publish-images:
+    name: Scan and publish images to GHCR
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs:
+      - code-quality
+      - dependency-scan
+      - secret-scan
+      - build-and-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Build, scan, and publish all service images
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISH_IMAGES: "true"
+        run: bash .github/scripts/build-scan-publish-images.sh

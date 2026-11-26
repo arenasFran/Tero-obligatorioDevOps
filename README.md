@@ -48,6 +48,20 @@ docker compose up --build <servicio>
 docker compose logs -f <servicio>
 ```
 
+## CI, seguridad y registry
+
+En cada Pull Request a `main`, GitHub Actions construye y prueba los servicios,
+ejecuta Semgrep, analiza dependencias con Trivy, busca secretos con Gitleaks y
+escanea las imágenes de contenedor. Los detalles y umbrales están en
+[`docs/security.md`](docs/security.md), [`docs/quality.md`](docs/quality.md) y
+[`docs/testing.md`](docs/testing.md).
+
+Después de integrar en `main`, el pipeline reconstruye y escanea las seis
+imágenes. Si todos los checks pasan, las publica en GHCR con el SHA completo
+del commit como tag. La configuración está en
+`.github/workflows/build.yml`; el job de publicación necesita `packages: write`
+para su `GITHUB_TOKEN`.
+
 ---
 
 ## Arquitectura de microservicios
