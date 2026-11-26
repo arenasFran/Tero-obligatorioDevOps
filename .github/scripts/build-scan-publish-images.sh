@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-: "${GITHUB_REPOSITORY:?GITHUB_REPOSITORY must be set by GitHub Actions}"
-: "${GITHUB_SHA:?GITHUB_SHA must be set by GitHub Actions}"
+: "${GITHUB_REPOSITORY:?GitHub Actions debe definir GITHUB_REPOSITORY}"
+: "${GITHUB_SHA:?GitHub Actions debe definir GITHUB_SHA}"
 
 owner_lower="${GITHUB_REPOSITORY_OWNER,,}"
 repository_lower="${GITHUB_REPOSITORY#*/}"
@@ -25,7 +25,7 @@ mkdir -p "$trivy_cache"
 
 for service in "${services[@]}"; do
   image="${image_prefix}-${service}:${image_tag}"
-  echo "Building ${image}"
+  echo "Compilando ${image}"
   docker build --pull \
     --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
     --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
@@ -36,7 +36,7 @@ done
 scan_status=0
 for service in "${services[@]}"; do
   image="${image_prefix}-${service}:${image_tag}"
-  echo "Scanning ${image}"
+  echo "Analizando ${image}"
   if ! docker run --rm \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v "${trivy_cache}:/root/.cache/" \
@@ -47,17 +47,17 @@ for service in "${services[@]}"; do
 done
 
 if [[ "$scan_status" -ne 0 ]]; then
-  echo "One or more images have HIGH or CRITICAL vulnerabilities; no images will be published." >&2
+  echo "Una o más imágenes tienen vulnerabilidades altas o críticas; no se publicará ninguna imagen." >&2
   exit "$scan_status"
 fi
 
 if [[ "${PUBLISH_IMAGES:-false}" == "true" ]]; then
-  : "${GH_TOKEN:?GH_TOKEN is required to publish images}"
+  : "${GH_TOKEN:?Se requiere GH_TOKEN para publicar imágenes}"
   echo "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
 
   for service in "${services[@]}"; do
     image="${image_prefix}-${service}:${image_tag}"
-    echo "Publishing ${image}"
+    echo "Publicando ${image}"
     docker push "$image"
   done
 fi
