@@ -36,6 +36,32 @@ resource "aws_db_subnet_group" "this" {
   })
 }
 
+# Las aplicaciones legacy abren la conexión con sslmode=disable, así que RDS
+# (que en PostgreSQL 16 exige SSL por defecto) las rechaza con
+# "no pg_hba.conf entry ... no encryption".
+#
+# rds.force_ssl es un parámetro dinámico: se puede desactivar sin reiniciar la
+# instancia. La base no es pública y solo acepta el puerto 5432 desde el
+# security group de las tareas, dentro de la VPC.
+#
+# Deuda técnica: habilitar TLS en catalog, orders, carts y admin, y volver a
+# force_ssl=1. Requiere recompilar imágenes y pasar por el pipeline de main.
+resource "aws_db_parameter_group" "this" {
+  name        = "${local.name_prefix}-postgres16"
+  family      = "postgres16"
+  description = "Parámetros de PostgreSQL del ambiente ${var.environment}"
+
+  parameter {
+    name         = "rds.force_ssl"
+    value        = "0"
+    apply_method = "immediate"
+  }
+
+  tags = merge(var.tags, {
+    Name = "${local.name_prefix}-postgres16"
+  })
+}
+
 resource "aws_db_instance" "this" {
   identifier = "${local.name_prefix}-postgres"
 
@@ -52,6 +78,7 @@ resource "aws_db_instance" "this" {
   password = random_password.db.result
 
   db_subnet_group_name   = aws_db_subnet_group.this.name
+  parameter_group_name   = aws_db_parameter_group.this.name
   vpc_security_group_ids = var.security_group_ids
   publicly_accessible    = false
 

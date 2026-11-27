@@ -18,7 +18,17 @@ output "services_security_group_id" {
   value       = aws_security_group.services.id
 }
 
+output "internal_alb_security_group_id" {
+  description = "Grupo de seguridad del ALB interno."
+  value       = aws_security_group.internal_alb.id
+}
+
 output "database_security_group_id" {
-  description = "Grupo de seguridad de PostgreSQL y Redis."
+  description = "Grupo de seguridad de PostgreSQL."
   value       = aws_security_group.database.id
+}
+
+output "cache_security_group_id" {
+  description = "Grupo de seguridad de Redis."
+  value       = aws_security_group.cache.id
 }

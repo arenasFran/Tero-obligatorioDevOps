@@ -18,6 +18,11 @@ variable "availability_zones" {
   type        = list(string)
 }
 
+variable "image_tag" {
+  description = "SHA del commit que se despliega. Tiene que existir en GHCR."
+  type        = string
+}
+
 variable "tags" {
   description = "Etiquetas adicionales."
   type        = map(string)

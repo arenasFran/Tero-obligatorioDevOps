@@ -17,11 +17,6 @@ variable "environment" {
   type        = string
 }
 
-variable "vpc_id" {
-  description = "VPC donde se registra el espacio de nombres privado."
-  type        = string
-}
-
 variable "tags" {
   description = "Etiquetas adicionales."
   type        = map(string)
@@ -45,17 +40,9 @@ resource "aws_ecs_cluster" "this" {
   })
 }
 
-# Reemplaza los nombres de servicio de Docker Compose. Dentro de la VPC,
-# `catalog.tero.local` resuelve a la tarea que esté corriendo.
-resource "aws_service_discovery_private_dns_namespace" "this" {
-  name        = "${var.project}.local"
-  description = "Descubrimiento de servicios del ambiente ${var.environment}"
-  vpc         = var.vpc_id
-
-  tags = merge(var.tags, {
-    Name = "${local.name_prefix}-namespace"
-  })
-}
+# Cloud Map está bloqueado por la política de AWS Academy
+# (servicediscovery:CreatePrivateDnsNamespace y CreateHttpNamespace), así que el
+# descubrimiento se resuelve con un ALB interno. Ver docs/adr/0004-sin-cloud-map.md.
 
 output "cluster_arn" {
   description = "ARN del clúster de ECS."
@@ -67,12 +54,4 @@ output "cluster_name" {
   value       = aws_ecs_cluster.this.name
 }
 
-output "namespace_id" {
-  description = "ID del espacio de nombres de Cloud Map."
-  value       = aws_service_discovery_private_dns_namespace.this.id
-}
 
-output "namespace_name" {
-  description = "Nombre DNS del espacio de nombres."
-  value       = aws_service_discovery_private_dns_namespace.this.name
-}
