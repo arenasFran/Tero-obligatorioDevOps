@@ -15,22 +15,22 @@ Pull Requests a `main` y en cada push a `main`:
   paquetes del sistema y dependencias incluidas en la imagen. Una vulnerabilidad
   `HIGH` o `CRITICAL` bloquea el job.
 
-En Pull Requests, `Build and test microservices / Build and scan container
-images` ejecuta el escaneo después de las pruebas de integración. Los análisis
-de calidad, dependencias y secretos corren en jobs separados para que el fallo
-de un escáner no oculte el resultado de otro. En `main`, el job
-`Scan and publish images to GHCR` reconstruye cada servicio, escanea todas las
-imágenes y solo las publica si todas pasan. El tag es el SHA completo del
-commit; no se publica `latest`.
+En Pull Requests, `Compilación y pruebas de integración de API / Compilar y
+analizar imágenes de contenedor` ejecuta el escaneo después de las pruebas de
+integración. Los análisis de calidad, dependencias y secretos corren en jobs
+separados para que el fallo de un escáner no oculte el resultado de otro. En
+`main`, el job `Analizar y publicar imágenes en GHCR` reconstruye cada servicio,
+escanea todas las imágenes y solo las publica si todas pasan. El tag es el SHA
+completo del commit; no se publica `latest`.
 
 Las imágenes se publican en GitHub Container Registry con nombres como
 `ghcr.io/<owner>/<repo>-catalog:<sha>`. La publicación requiere que la ejecución
 sea un push a `main` y usa `GITHUB_TOKEN` con `packages: write` limitado a ese
 job. No requiere guardar una contraseña de registry como secret.
 
-El pipeline presenta los resultados como checks de GitHub Actions. Para que
-bloqueen el merge, los checks de calidad, integración, seguridad y análisis de
-imágenes deben estar marcados como requeridos en el ruleset de `main`.
+El pipeline presenta los resultados como checks de GitHub Actions. Los cinco
+checks (calidad, integración, dependencias, secretos e imágenes) están marcados
+como requeridos en el ruleset `protect-main`, así que un fallo bloquea el merge.
 
 ## Inventario inicial
 
@@ -44,12 +44,13 @@ Escaneo local del 25-11-2026 con Trivy 0.76.2, limitado a vulnerabilidades
 | `carts` | 0 / 0 | 57 / 0 |
 | `orders` | 19 / 2 | 44 / 2 |
 | `checkout` | 76 / 6 | 33 / 1 |
-| `ui` | Sin lockfile analizable | 10 / 0 |
-| `admin` | Sin lockfile analizable | 10 / 0 |
+| `ui` | Sin lockfile (al momento del escaneo) | 10 / 0 |
+| `admin` | Sin lockfile (al momento del escaneo) | 10 / 0 |
 
-`ui` y `admin` tienen `package.json`, pero no lockfiles; Trivy filesystem no
-pudo resolver sus grafos desde los manifiestos. El escaneo de imagen sí encontró
-dependencias vulnerables en ambas. `carts` no presenta alertas en su archivo de
+`ui` y `admin` tenían `package.json` pero no lockfiles en ese momento, así que
+Trivy filesystem no pudo resolver sus grafos desde los manifiestos. El escaneo
+de imagen sí encontró dependencias vulnerables en ambas. Después se generaron
+los lockfiles; ver "Remediaciones aplicadas". `carts` no presenta alertas en su archivo de
 requisitos, pero la imagen incluye alertas del sistema operativo y Starlette.
 
 ## Remediaciones aplicadas

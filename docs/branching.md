@@ -11,7 +11,7 @@ GitHub Flow: una rama permanente (`main`) y ramas cortas por tarea que se integr
 - Si el equipo creciera o hubiera que mantener varias versiones a la vez, se reevaluaría Git Flow.
 
 ## Reglas del equipo
-- `main` siempre debe estar desplegable y está protegida (ruleset `proteger-main`).
+- `main` siempre debe estar desplegable y está protegida (ruleset `protect-main`).
 - Nadie empuja directo a `main`: todo entra por PR.
 - Cada PR necesita 1 aprobación de un integrante distinto al autor.
 - Nombres de rama: `feature/`, `docs/`, `fix/` seguido de una descripción corta.
