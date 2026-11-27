@@ -207,6 +207,42 @@ aws ecs update-service --cluster tero-dev --service carts --force-new-deployment
 | Una tarea por servicio | Costo del laboratorio | `desired_count >= 2` y auto scaling para producción |
 | Sin HTTPS | No hay dominio ni certificado en el laboratorio | ACM + Route 53 y redirección 80 → 443 |
 
+## Excepciones de Semgrep
+
+El pipeline corre `semgrep scan --config auto --error`, que incluye reglas de
+Terraform. Estas están suprimidas con `# nosemgrep` y su justificación:
+
+| Regla | Motivo de la excepción |
+|---|---|
+| `aws-secretsmanager-secret-unencrypted` | Secrets Manager ya cifra en reposo con la clave gestionada `aws/secretsmanager`; una CMK propia requiere `kms:CreateKey`, que AWS Academy bloquea |
+| `aws-cloudwatch-log-group-unencrypted` | CloudWatch Logs cifra en reposo con claves del servicio; una CMK propia requiere `kms:CreateKey`, bloqueado |
+| `aws-elb-access-logs-not-enabled` | Los logs de aplicación ya se centralizan en CloudWatch; los access logs del ALB se agregan con el módulo de observabilidad |
+| `insecure-load-balancer-tls-version` | Sin dominio ni certificado en el laboratorio, el ALB solo publica HTTP; en producción se agrega 443 + ACM + redirección |
+
+Corregidas de raíz (no suprimidas): backups de RDS a 1 día, exportación de logs
+de PostgreSQL a CloudWatch y subnets sin asignación automática de IP pública.
+
+## Justificación frente a la letra
+
+Cómo cada decisión de este módulo responde a un punto del obligatorio:
+
+| Punto | Cómo se cumple acá |
+|---|---|
+| **3.2** Registry de imágenes | GHCR, publicadas por el pipeline en `.github/workflows/build.yml` |
+| **3.3** Orquestación en nube | ECS Fargate con seis servicios |
+| **7.1** IaC con Terraform | Todo en `infra/`, salvo el bucket del estado (la letra lo permite explícitamente) |
+| **7.2** Modularización | `modules/{stack,alb,ecs-service,redis,network,database,ecs-cluster}` |
+| **7.2** Variables por ambiente | `envs/{dev,test,prod}` con CIDR e `image_tag` propios |
+| **7.2** Outputs documentados | `outputs.tf` con `description` en cada módulo y ambiente |
+| **7.2** Secretos seguros | Secrets Manager + `random_password`; el estado remoto se cifra en S3 (SSE-S3); ningún secreto en el repositorio |
+| **7.2** Estado remoto | S3 con versionado, cifrado y `use_lockfile` |
+| **8** Observabilidad (base) | Logs centralizados en CloudWatch y Container Insights activado; dashboard y alertas se completan en su módulo |
+| **7.3** Serverless | Pendiente, módulo aparte (ver más abajo) |
+
+> Nota: `rds.force_ssl=0` y el ALB en HTTP son concesiones del laboratorio
+> (sin CMK, sin dominio y sin poder recompilar las apps sin pasar por `main`).
+> Están documentadas como deuda arriba y se justifican en la defensa.
+
 ## Estado y cómo retomar
 
 **Hecho y verificado (2026-11-27)**
