@@ -89,7 +89,8 @@ ui → ALB interno → catalog :8082 / carts :8083 / orders :8084 / checkout :80
   tienda, el panel, el catálogo, el carrito, el checkout y las órdenes.
 
 El procedimiento completo, las variables, los outputs, la operación y la deuda
-técnica están en [`infra/README.md`](infra/README.md).
+técnica están en [`infra/README.md`](infra/README.md). Para reproducir el
+despliegue desde cero, seguí [`infra/guia-despliegue.md`](infra/guia-despliegue.md).
 
 ---
 

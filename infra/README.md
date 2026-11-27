@@ -6,6 +6,9 @@ Este directorio contiene toda la infraestructura de Tero como código
 > Estado: **dev desplegado y verificado**. `test` y `prod` están definidos y
 > validados, pero no aplicados (ver [Estado y cómo retomar](#estado-y-cómo-retomar)).
 
+> **¿Arrancás de cero?** Seguí la [guía de despliegue](guia-despliegue.md), que
+> cubre conectar AWS, crear el bucket y desplegar los tres ambientes paso a paso.
+
 ## Arquitectura
 
 ```
