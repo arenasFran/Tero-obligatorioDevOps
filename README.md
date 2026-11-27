@@ -125,10 +125,10 @@ para su `GITHUB_TOKEN`.
 | Servicio     | Lenguaje       | Framework        | Runtime         | Persistencia      | Puerto externo |
 |--------------|----------------|------------------|-----------------|-------------------|----------------|
 | **ui**       | TypeScript     | Express          | Node.js 22      | —                 | 8080           |
-| **catalog**  | Go 1.24        | Gin + GORM       | Alpine Linux    | PostgreSQL        | —              |
-| **cart**     | Python 3.12    | FastAPI          | Python slim     | PostgreSQL        | —              |
+| **catalog**  | Go 1.26        | Gin + GORM       | Alpine Linux    | PostgreSQL        | —              |
+| **cart**     | Python 3.12    | FastAPI          | Alpine Linux    | PostgreSQL        | —              |
 | **checkout** | TypeScript     | NestJS           | Node.js 22      | Redis             | —              |
-| **orders**   | Go 1.24        | Gin + GORM       | Alpine Linux    | PostgreSQL        | —              |
+| **orders**   | Go 1.26        | Gin + GORM       | Alpine Linux    | PostgreSQL        | —              |
 | **admin**    | TypeScript     | Express          | Node.js 22      | PostgreSQL        | 8081           |
 | **db**       | —              | PostgreSQL 16    | —               | —                 | —              |
 | **redis**    | —              | Redis 7          | Alpine Linux    | —                 | —              |
@@ -182,16 +182,19 @@ para su `GITHUB_TOKEN`.
 ## Estructura del repositorio
 
 ```
-app/
+.
+├── src/                    # Los seis microservicios
+│   ├── catalog/            # Go - Catálogo de productos
+│   ├── cart/               # Python - Carrito de compras
+│   ├── checkout/           # TypeScript/NestJS - Proceso de pago
+│   ├── orders/             # Go - Gestión de órdenes
+│   ├── ui/                 # TypeScript/Express - Frontend
+│   └── admin/              # TypeScript/Express - Panel de administración
+├── tests/postman/          # Colección de pruebas de API (Newman)
+├── .github/                # Workflows y scripts de CI
+├── docs/                   # ADRs, guías y evidencias
 ├── docker-compose.yml
-├── init-db.sql
-└── src/
-    ├── catalog/        # Go - Catálogo de productos
-    ├── cart/           # Python - Carrito de compras
-    ├── checkout/       # TypeScript/NestJS - Proceso de pago
-    ├── orders/         # Go - Gestión de órdenes
-    ├── ui/             # TypeScript/Express - Frontend
-    └── admin/          # TypeScript/Express - Panel de administración
+└── init-db.sql
 ```
 
 ---
@@ -201,6 +204,8 @@ app/
 Las decisiones relevantes se documentan como ADRs en [`docs/adr/`](docs/adr/):
 
 - [ADR 0001 — Secretos fuera del repositorio](docs/adr/0001-secretos-fuera-del-repositorio.md)
+- [ADR 0002 — Un solo repositorio para aplicación, pipelines e infraestructura](docs/adr/0002-monorepo.md)
+- [ADR 0003 — CloudWatch como plataforma única de observabilidad](docs/adr/0003-cloudwatch.md)
 
 El análisis estático de código y su umbral de calidad se describen en
 [`docs/quality.md`](docs/quality.md). Las pruebas funcionales de API se explican
