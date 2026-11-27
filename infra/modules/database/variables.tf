@@ -47,6 +47,12 @@ variable "username" {
   default     = "retail_user"
 }
 
+variable "backup_retention_days" {
+  description = "Días de retención de backups automáticos de RDS."
+  type        = number
+  default     = 1
+}
+
 variable "tags" {
   description = "Etiquetas adicionales."
   type        = map(string)

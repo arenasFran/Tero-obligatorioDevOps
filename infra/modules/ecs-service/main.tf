@@ -40,6 +40,9 @@ locals {
   ]
 }
 
+# CloudWatch cifra los log groups en reposo con claves gestionadas por el
+# servicio. Una CMK propia requiere kms:CreateKey, bloqueado en AWS Academy.
+# nosemgrep: terraform.aws.security.aws-cloudwatch-log-group-unencrypted.aws-cloudwatch-log-group-unencrypted
 resource "aws_cloudwatch_log_group" "this" {
   name              = "/ecs/${local.name_prefix}/${var.service_name}"
   retention_in_days = var.log_retention_days

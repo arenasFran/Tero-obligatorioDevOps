@@ -172,6 +172,9 @@ resource "random_password" "admin_jwt_secret" {
   special = false
 }
 
+# Secrets Manager ya cifra en reposo con la clave gestionada aws/secretsmanager.
+# Una CMK propia requiere kms:CreateKey, que AWS Academy bloquea.
+# nosemgrep: terraform.aws.security.aws-secretsmanager-secret-unencrypted.aws-secretsmanager-secret-unencrypted
 resource "aws_secretsmanager_secret" "admin" {
   name                    = "${local.name_prefix}/admin"
   description             = "Credenciales del panel de administración del ambiente ${var.environment}"
@@ -198,6 +201,9 @@ resource "aws_secretsmanager_secret_version" "admin" {
 # con una tarea one-off que corre dentro de la VPC. El null_resource la lanza
 # después de que RDS está disponible y antes de arrancar los servicios.
 
+# CloudWatch cifra los log groups en reposo con claves gestionadas por el
+# servicio. Una CMK propia requiere kms:CreateKey, bloqueado en AWS Academy.
+# nosemgrep: terraform.aws.security.aws-cloudwatch-log-group-unencrypted.aws-cloudwatch-log-group-unencrypted
 resource "aws_cloudwatch_log_group" "db_init" {
   name              = "/ecs/${local.name_prefix}/db-init"
   retention_in_days = var.log_retention_days

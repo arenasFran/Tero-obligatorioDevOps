@@ -86,14 +86,20 @@ resource "aws_db_instance" "this" {
   # `terraform destroy` libere el presupuesto del laboratorio.
   skip_final_snapshot     = true
   deletion_protection     = false
-  backup_retention_period = 0
+  backup_retention_period = var.backup_retention_days
   apply_immediately       = true
+
+  # Logs de PostgreSQL en CloudWatch para diagnóstico y auditoría.
+  enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
 
   tags = merge(var.tags, {
     Name = "${local.name_prefix}-postgres"
   })
 }
 
+# Secrets Manager ya cifra en reposo con la clave gestionada aws/secretsmanager.
+# Una CMK propia requiere kms:CreateKey, que AWS Academy bloquea.
+# nosemgrep: terraform.aws.security.aws-secretsmanager-secret-unencrypted.aws-secretsmanager-secret-unencrypted
 resource "aws_secretsmanager_secret" "db" {
   name                    = "${local.name_prefix}/postgres"
   description             = "Credenciales de PostgreSQL del ambiente ${var.environment}"

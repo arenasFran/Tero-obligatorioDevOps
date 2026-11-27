@@ -33,10 +33,12 @@ resource "aws_internet_gateway" "this" {
 resource "aws_subnet" "public" {
   for_each = local.subnet_map
 
-  vpc_id                  = aws_vpc.this.id
-  availability_zone       = each.key
-  cidr_block              = cidrsubnet(var.vpc_cidr, 8, each.value + 1)
-  map_public_ip_on_launch = true
+  vpc_id            = aws_vpc.this.id
+  availability_zone = each.key
+  cidr_block        = cidrsubnet(var.vpc_cidr, 8, each.value + 1)
+  # Las tareas piden IP pública explícitamente en su network_configuration
+  # (assign_public_ip = true). La subnet no necesita asignarla por defecto.
+  map_public_ip_on_launch = false
 
   tags = merge(var.tags, {
     Name = "${local.name_prefix}-public-${each.key}"

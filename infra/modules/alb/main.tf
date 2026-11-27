@@ -23,6 +23,9 @@ locals {
   name_prefix = "${var.project}-${var.environment}"
 }
 
+# Los logs de aplicación se centralizan en CloudWatch. Los access logs del ALB
+# se incorporan con el módulo de observabilidad.
+# nosemgrep: terraform.aws.security.aws-elb-access-logs-not-enabled.aws-elb-access-logs-not-enabled
 resource "aws_lb" "this" {
   name               = "${local.name_prefix}-${var.name_suffix}"
   internal           = var.internal
@@ -70,12 +73,15 @@ resource "aws_lb_target_group" "this" {
   })
 }
 
+# Sin dominio ni certificado en el laboratorio, el ALB solo publica HTTP.
+# En producción se agrega un listener 443 con ACM y se redirige el 80.
 resource "aws_lb_listener" "this" {
   for_each = var.listeners
 
   load_balancer_arn = aws_lb.this.arn
   port              = each.value.port
-  protocol          = "HTTP"
+  # nosemgrep: terraform.aws.security.insecure-load-balancer-tls-version.insecure-load-balancer-tls-version
+  protocol = "HTTP"
 
   default_action {
     type             = "forward"
