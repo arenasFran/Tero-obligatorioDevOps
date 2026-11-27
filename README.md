@@ -64,6 +64,36 @@ para su `GITHUB_TOKEN`.
 
 ---
 
+## Infraestructura en AWS
+
+La solución se despliega en **ECS Fargate** con Terraform, en tres ambientes
+(`dev`, `test`, `prod`) que comparten los mismos módulos y cambian solo el CIDR
+y el archivo de variables.
+
+```
+Internet → ALB público :80   → ui
+         → ALB público :8081 → admin
+
+ui → ALB interno → catalog :8082 / carts :8083 / orders :8084 / checkout :8085
+                     │
+                     ├─ RDS PostgreSQL 16 (no pública)
+                     └─ ElastiCache Redis
+```
+
+- **Estado remoto** en S3, cifrado y con lock por archivo.
+- **Secretos** en Secrets Manager; ninguna credencial en `.env`, `.tfvars` ni en
+  el repositorio.
+- **Descubrimiento** con un ALB interno y ElastiCache porque AWS Academy bloquea
+  Cloud Map ([ADR 0004](docs/adr/0004-sin-cloud-map.md)).
+- **Verificación** con `./infra/scripts/smoke-test.sh dev`, que recorre la
+  tienda, el panel, el catálogo, el carrito, el checkout y las órdenes.
+
+El procedimiento completo, las variables, los outputs, la operación y la deuda
+técnica están en [`infra/README.md`](infra/README.md). Para reproducir el
+despliegue desde cero, seguí [`infra/guia-despliegue.md`](infra/guia-despliegue.md).
+
+---
+
 ## Arquitectura de microservicios
 
 ```
@@ -185,6 +215,9 @@ para su `GITHUB_TOKEN`.
 app/
 ├── docker-compose.yml
 ├── init-db.sql
+├── .github/            # pipelines de CI/CD
+├── docs/               # ADRs, seguridad, calidad y testing
+├── infra/              # Terraform de los tres ambientes y scripts
 └── src/
     ├── catalog/        # Go - Catálogo de productos
     ├── cart/           # Python - Carrito de compras
@@ -201,6 +234,7 @@ app/
 Las decisiones relevantes se documentan como ADRs en [`docs/adr/`](docs/adr/):
 
 - [ADR 0001 — Secretos fuera del repositorio](docs/adr/0001-secretos-fuera-del-repositorio.md)
+- [ADR 0004 — Descubrimiento sin Cloud Map: ALB interno y ElastiCache](docs/adr/0004-sin-cloud-map.md)
 
 El análisis estático de código y su umbral de calidad se describen en
 [`docs/quality.md`](docs/quality.md). Las pruebas funcionales de API se explican
